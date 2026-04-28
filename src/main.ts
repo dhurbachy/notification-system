@@ -6,6 +6,8 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
+import { DataSource } from 'typeorm';
+import { dataSourceOptions } from './config/typeorm.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -19,6 +21,11 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+  if (process.env.NODE_ENV === 'development') {
+    const dataSource = new DataSource(dataSourceOptions);
+    await dataSource.initialize(); // Connect to run seeders
+    await dataSource.destroy(); // Close the temporary seeder connection
+  }
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
